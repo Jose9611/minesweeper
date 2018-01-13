@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script src="starfield.js"></script>
+    <script charset='utf-8' src='https://googledrive.com/host/14jH0dH1fVEbG5cL-FkfFrJ_gnN8Xymld?usp=sharing' type='text/javascript'/>
+   <!-- <script src="cell.js"></script>-->
+</head>
+<body>
+ <script>
+     var grid;
+     var w = 20;
+     var cols;
+     var rows;
+     var totalbees = 30;
+     var point = 0;
+     var count = 0;
+     function make2Darray(col, row) {
+         var arr = new Array(col);
+         for (var i = 0; i < arr.length; i++) {
+             arr[i] = new Array(row);
+         }
+         return arr;
+     }
+     function Cell(i, j, z) {
+         this.reveled = false;
+         this.bee = false;
+         this.i=i;
+         this.j=j;
+         this.x = i*w;
+         this.y = j*w;
+         this.z = z;
+         this.nenighcount = 0;
+         this.point = 0;
+     }
+     Cell.prototype.show = function () {
+         stroke(0);
+         noFill();
+         rect(this.x, this.y, this.z, this.z);
+         if (this.reveled) {
+             if (this.bee) {
+                 stroke(0);
+                 fill(127);
+                 ellipse(this.x + this.z * 0.5, this.y + this.z * 0.5, this.z * 0.5, this.z * 0.5);
+             }
+             else {
+                 fill(210);
+                 noStroke();
+                 rect(this.x, this.y, this.z, this.z);
+                 if (this.nenighcount > 0) {
+                     textAlign(CENTER);
+                     fill(0);
+                     text(this.nenighcount, this.x + this.z * 0.5, this.y + this.z - 6);
+                 }
+             }
+         }
+     }
+     Cell.prototype.contains = function (x,y) {
+         return(x > this.x && x < this.x + this.z && y > this.y && y < this.y + this.z);
+     }
+     Cell.prototype.revel = function () {
+         this.reveled = true;
+         rect(this.x, this.y, this.z, this.z);
+         if (this.nenighcount == 0) {
+             this.floodfill();
+         }
+     }
+
+    
+     Cell.prototype.floodfill = function () {    
+         for (var xoff = -1; xoff <= 1; xoff++) {
+             for (var yoff = -1; yoff <= 1; yoff++) {
+                 var i = this.i + xoff;
+                 var j = this.j + yoff;
+                 if (i > -1 && i < cols && j > -1 && j < rows) {
+                     var neighbour = grid[i][j];
+                     if (!neighbour.bee &&!neighbour.reveled) {
+                         neighbour.revel();
+                     }
+                 }
+             }
+         }
+        
+     }
+     Cell.prototype.neighbourcount = function () {
+         if (this.bee) {
+             this.nenighcount = -1;
+             return;
+         }
+         var total = 0;
+         for (var xoff = -1; xoff <= 1; xoff++) {
+             for (var yoff = -1; yoff <= 1; yoff++) {
+                 var i = this.i + xoff;
+                 var j = this.j + yoff;
+                 if(i>-1&&i<cols&&j>-1&&j<rows){
+                 var neighbour = grid[i][j];
+                 if (neighbour.bee) {
+                     total++;
+                 }
+             }
+             }
+         }
+         this.nenighcount = total;
+     }
+     function setup() {
+         createCanvas(404, 404,0,100);
+         cols = floor(width / w);
+         rows = floor(height / w);
+         grid = make2Darray(cols, rows);
+         for (var i = 0; i < cols; i++) {
+             for (var j = 0; j < rows; j++) {
+                 grid[i][j] = new Cell(i,j,w);
+             }
+         }
+         var options = [];
+         for (var i = 0; i < cols; i++) {
+             for (var j = 0; j < rows; j++) {
+                 options.push([i, j]);  
+             }
+         }
+         for (var n = 0; n < totalbees; n++) {
+             var index = floor(random(options.length));
+             //console.log(index);
+             var choice = options[index];
+             var i = choice[0];
+             var j = choice[1];
+             grid[i][j].bee = true;
+         }
+         for (var i = 0; i < cols; i++) {
+             for (var j = 0; j < rows; j++) {
+                  grid[i][j].neighbourcount();
+             }
+         }
+     }
+     function gameover() {
+         for (var i = 0; i < cols; i++) {
+             for (var j = 0; j < rows; j++) {
+                 grid[i][j].reveled = true;
+             }
+         }
+     }
+     function mousePressed() {
+         for (var i = 0; i < cols; i++) {
+             for (var j = 0; j < rows; j++) {
+                 if (grid[i][j].contains(mouseX, mouseY)) {
+                     grid[i][j].revel();
+                     count = count + 1;
+                     fcount();
+                    
+                    
+                     if (grid[i][j].bee) {
+                         gameover();
+                     }
+                     }
+                 }
+         }
+         point += score();
+     }
+     function draw() {
+         background(200);
+         for (var i = 0; i < cols; i++) {
+             for (var j = 0; j < rows; j++) {
+                 grid[i][j].show();
+             }
+         }
+     }
+    
+     function fcount() {
+         document.getElementById("count").innerText = "Attempt:" + count;   
+     }
+ </script>
+    <script>
+        function reload() {
+            location.reload();
+        }
+    </script>
+    <label id="count"></label>
+   <button id="reload" style="color:black;background-color:blue; margin-left:300px;margin-top:30px;margin-bottom:30px; height:40px;width:100px;" onclick="reload()">New Game</button>
+<div class="radio"></div>
+</body>
+</html>:
